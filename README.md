@@ -3,9 +3,12 @@
 
 ## 示例
 
-<img src="https://github.com/error-code/leguang_guide/blob/main/img/Screenshot_20250120_171244.png?raw=true" width="400" />
+<img src="https://github.com/error-code/leguang_guide/blob/main/img/Screenshot_20250120_171244.png?raw=true" width="300" />
 
-<img src="https://github.com/error-code/leguang_guide/raw/refs/heads/main/img/Screen_recording_20250120_171144.webm" />
+<video width="320" height="240" controls>
+  <source src="https://github.com/error-code/leguang_guide/raw/refs/heads/main/img/Screen_recording_20250120_171144.webm" type="video/webm">
+  Your browser does not support the video tag.
+</video>
 
 ## 开始使用
 
