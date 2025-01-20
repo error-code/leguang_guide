@@ -10,6 +10,8 @@
   Your browser does not support the video tag.
 </video>
 
+[Watch the Video](https://raw.githubusercontent.com/error-code/leguang_guide/refs/heads/main/img/Screen_recording_20250120_171144.webm)
+
 ## 开始使用
 
 
