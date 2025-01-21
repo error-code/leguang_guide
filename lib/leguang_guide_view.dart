@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 
 import 'leguang_guide_entity.dart';
@@ -12,16 +14,20 @@ class LeguangGuideView extends StatefulWidget {
 
 class _LeguangGuideViewState extends State<LeguangGuideView> {
 
-  int current = 0;
-  GuideStepEntity? step;
+  int current = -1;
+  Offset offset = const Offset(0, 0);
+  Size size = const Size(0, 0);
+  String title = '';
+  GlobalKey key = GlobalKey();
+  double titleHeight = 0;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+
     if(widget.steps.isNotEmpty){
-      step = widget.steps.first;
-      setState(() {});
+      toNext();
     }
   }
 
@@ -31,7 +37,19 @@ class _LeguangGuideViewState extends State<LeguangGuideView> {
       Navigator.pop(context);
       return;
     }
-    step = widget.steps[current];
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // 组件渲染完成后执行的操作
+      // 延迟到下一帧渲染完成后执行
+      print("Widget渲染完成，延迟操作");
+      RenderBox box = key.currentContext!.findRenderObject() as RenderBox;
+      log('${box.size.height}');
+      offset = widget.steps[current].offset;
+      titleHeight = box.size.height;
+      setState(() {});
+    });
+    // offset = widget.steps[current].offset;
+    size = widget.steps[current].size;
+    title = widget.steps[current].title;
     setState(() { });
   }
 
@@ -43,13 +61,13 @@ class _LeguangGuideViewState extends State<LeguangGuideView> {
         backgroundColor: Colors.transparent,
         body: Stack(
           children: [
-            if(step!=null)
-              ...stepWidget(),
+            ...stepWidget(),
             Positioned(
               top: kToolbarHeight-10,
               right: 20,
               child: skipWidget(),
             ),
+            tipsWidget(),
           ],
         ),
       ),
@@ -57,9 +75,6 @@ class _LeguangGuideViewState extends State<LeguangGuideView> {
   }
 
   List<Positioned> stepWidget(){
-    if(step==null) return [];
-    Offset offset = step!.offset;
-    Size size = step!.size;
     return  [
       // 位置
       Positioned.fill(
@@ -74,115 +89,149 @@ class _LeguangGuideViewState extends State<LeguangGuideView> {
         ),
       ),
       //绘制小圆点
-      tipsWidget(offset,size,'${step?.title}')
     ];
   }
 
-  Positioned tipsWidget(Offset offset,Size size,String title){
+  AnimatedPositioned tipsWidget(){
     double left = offset.dx;
-    double top = offset.dy+size.height+4;
-    return Positioned(
+    double? top = offset.dy+size.height+4;
+    bool isBottom = top>MediaQuery.sizeOf(context).height/2;
+    if(isBottom){
+      top-= size.height+100+titleHeight;
+    }
+    return AnimatedPositioned(
+      duration: const Duration(milliseconds: 200),
       left: left,
       top: top,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            margin: const EdgeInsets.only(
-              left: 10
-            ),
-            decoration: BoxDecoration(
-              color: const Color(0xff01908A).withOpacity(.4),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            padding: const EdgeInsets.all(3),
-            child: Container(
-              width: 13,
-              height: 13,
-              decoration: BoxDecoration(
-                color: const Color(0xff01908A),
-                borderRadius: BorderRadius.circular(20),
-              ),
-            ),
-          ),
-          Container(
-            margin:const EdgeInsets.only(
-              left: 10,
-              top: 3,
-              bottom: 3
-            ),
-            width: 16,
-            height: 70,
-            child: CustomPaint(
-              painter: DashedLinePainter(),
-            ),
-          ),
-          Stack(
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  color: const Color(0xff01908A),
-                  borderRadius: BorderRadius.circular(10)
-                ),
-                constraints: BoxConstraints(
-                  maxWidth: MediaQuery.sizeOf(context).width-50,
-                  minWidth: 200
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 10,vertical: 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title,style:const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500
-                    )),
-                    Container(
-                      margin: const EdgeInsets.only(
-                        top: 15,
-                        bottom: 5
-                      ),
-                      child: Text('新手教程：${current+1}/${widget.steps.length}',style: TextStyle(
-                        color: Colors.white.withOpacity(.6),
-                        fontSize: 12
-                      )),
-                    )
-                  ],
-                ),
-              ),
-              Positioned(
-                right: 10,
-                bottom: 10,
-                child: GestureDetector(
-                  onTap: toNext,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.transparent,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: Colors.white
-                      )
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 10,vertical: 3),
-                    child: const Text('知道了',style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.white
-                    )),
-                  ),
-                ),
-              )
-            ],
-          )
+        children: isBottom?[
+          titleWidget(),
+          const SizedBox(height: 5),
+          lineWidget(),
+          dotWidget(),
+        ]:[
+          dotWidget(),
+          const SizedBox(height: 5),
+          lineWidget(),
+          titleWidget()
         ],
       ),
     );
   }
 
+  Widget titleWidget(){
+    return Stack(
+      children: [
+        LayoutBuilder(
+          builder: (_,box){
+            double width = MediaQuery.sizeOf(context).width;
+            double minWidth = 200;
+            double maxWidth = width-offset.dx-20;
+            if(minWidth>maxWidth){
+              minWidth = maxWidth;
+            }
+            return AnimatedContainer(
+              key: key,
+              duration: const Duration(milliseconds: 200),
+              decoration: BoxDecoration(
+                color: const Color(0xff01908A),
+                borderRadius: BorderRadius.circular(10)
+              ),
+              constraints: BoxConstraints(
+                maxWidth: maxWidth,
+                minWidth: minWidth
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 10,vertical: 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,style:const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500
+                  )),
+                  Container(
+                    margin: const EdgeInsets.only(
+                      top: 15,
+                      bottom: 5
+                    ),
+                    child: Text('新手教程：${current+1}/${widget.steps.length}',style: TextStyle(
+                      color: Colors.white.withOpacity(.6),
+                      fontSize: 12
+                    )),
+                  )
+                ],
+              ),
+            );
+          },
+        ),
+        Positioned(
+          right: 10,
+          bottom: 10,
+          child: GestureDetector(
+            onTap: toNext,
+            child: Container(
+              decoration: BoxDecoration(
+                  color: Colors.transparent,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                      color: Colors.white
+                  )
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 10,vertical: 3),
+              child: const Text('知道了',style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.white
+              )),
+            ),
+          ),
+        )
+      ],
+    );
+  }
+
+  Widget dotWidget(){
+    return Container(
+      margin: const EdgeInsets.only(
+        left: 10
+      ),
+      decoration: BoxDecoration(
+        color: const Color(0xff01908A).withOpacity(.4),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      padding: const EdgeInsets.all(3),
+      child: Container(
+        width: 13,
+        height: 13,
+        decoration: BoxDecoration(
+          color: const Color(0xff01908A),
+          borderRadius: BorderRadius.circular(20),
+        ),
+      ),
+    );
+  }
+
+  Widget lineWidget(){
+    return Container(
+      margin:const EdgeInsets.only(
+        left: 10,
+        top: 0,
+        bottom: 0
+      ),
+      width: 16,
+      height: 70,
+      child: CustomPaint(
+        painter: DashedLinePainter(),
+      ),
+    );
+  }
+
+
+
   Widget skipWidget(){
     return InkWell(
       onTap: (){
-        step = null;
-        setState(() {});
         Navigator.pop(context);
       },
       child: Container(

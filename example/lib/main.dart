@@ -46,10 +46,10 @@ class _MyHomePageState extends State<MyHomePage> {
     LeguangGuide.show(
       context: context,
       guides: [
-        GuideEntity(keyId: key1,title: '点击搜索关键词或者图片同款商品'),
-        GuideEntity(keyId: key2,title: '点击搜索关键词或者图片同款商品'),
-        GuideEntity(keyId: key3,title: '点击搜索关键词或者图片同款商品'),
-        GuideEntity(keyId: key4,title: '点击搜索关键词或者图片同款商品'),
+        GuideEntity(keyId: key4,title: '点击列表元素1点击列表元素1点击列表元素1点击列表元素1点击列表元素1点击列表元素1'),
+        GuideEntity(keyId: key1,title: '点击元素1'),
+        GuideEntity(keyId: key2,title: '点击元素2点击元素2点击元素2点击元素2点击元素2点击元素2点击元素2'),
+        GuideEntity(keyId: key3,title: '点击元素3'),
       ]
     );
   }
@@ -113,7 +113,7 @@ class _MyHomePageState extends State<MyHomePage> {
               separatorBuilder: (_,index)=>const Divider(),
               itemBuilder: (_,index){
                 return Container(
-                  key: index==1?key4:null,
+                  key: index==6?key4:null,
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   color: const Color(0xff01908A),
                   alignment: Alignment.center,

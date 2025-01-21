@@ -28,8 +28,11 @@ class LeguangGuide{
       print('Position: ${position.dx}, ${position.dy}');
       steps.add(GuideStepEntity(
         title: item.title??'',
-        size: size,
-        offset: position
+        size: Size(
+          size.width+4,
+          size.height+4
+        ),
+        offset: Offset(position.dx-2, position.dy-2)
       ));
     }
 
