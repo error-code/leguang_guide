@@ -1,8 +1,8 @@
 import 'dart:developer';
-
 import 'package:flutter/material.dart';
+import 'package:leguang_guide/src/leguang_guide_box.dart';
+import '../leguang_guide.dart';
 
-import 'leguang_guide_entity.dart';
 
 class LeguangGuideView extends StatefulWidget {
   const LeguangGuideView({super.key,this.steps = const []});
@@ -20,15 +20,14 @@ class _LeguangGuideViewState extends State<LeguangGuideView> {
   String title = '';
   GlobalKey key = GlobalKey();
   double titleHeight = 0;
+  List<Size> sizeList = [];
+  bool isBegin = false;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-
-    if(widget.steps.isNotEmpty){
-      toNext();
-    }
+    sizeList = List.generate(widget.steps.length, (_)=>Size.zero);
   }
 
   void toNext(){
@@ -37,20 +36,17 @@ class _LeguangGuideViewState extends State<LeguangGuideView> {
       Navigator.pop(context);
       return;
     }
+    setState(() {});
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // 组件渲染完成后执行的操作
       // 延迟到下一帧渲染完成后执行
       print("Widget渲染完成，延迟操作");
-      RenderBox box = key.currentContext!.findRenderObject() as RenderBox;
-      log('${box.size.height}');
       offset = widget.steps[current].offset;
-      titleHeight = box.size.height;
+      size = widget.steps[current].size;
+      titleHeight = sizeList[current].height;
+      title = widget.steps[current].title;
       setState(() {});
     });
-    // offset = widget.steps[current].offset;
-    size = widget.steps[current].size;
-    title = widget.steps[current].title;
-    setState(() { });
   }
 
   @override
@@ -61,44 +57,76 @@ class _LeguangGuideViewState extends State<LeguangGuideView> {
         backgroundColor: Colors.transparent,
         body: Stack(
           children: [
-            ...stepWidget(),
+            /// 先渲染
+            Positioned(
+              left: 0,
+              right: 0,
+              child: Opacity(
+                opacity: 0,
+                child: widgetList(),
+              ),
+            ),
+            Positioned.fill(
+              child: ClipPath(
+                clipper: TransparentClipper(
+                  boxOffset: offset,
+                  boxSize: size
+                ), // 定义透明区域
+                child: Container(
+                  color: const Color(0xff14232E).withOpacity(0.5), // 半透明遮罩层
+                ),
+              ),
+            ),
             Positioned(
               top: kToolbarHeight-10,
               right: 20,
               child: skipWidget(),
             ),
-            tipsWidget(),
+            if(current>-1)
+              tipsWidget(),
           ],
         ),
       ),
     );
   }
 
-  List<Positioned> stepWidget(){
-    return  [
-      // 位置
-      Positioned.fill(
-        child: ClipPath(
-          clipper: TransparentClipper(
-            boxOffset: offset,
-            boxSize: size
-          ), // 定义透明区域
-          child: Container(
-            color: const Color(0xff14232E).withOpacity(0.5), // 半透明遮罩层
-          ),
-        ),
-      ),
-      //绘制小圆点
-    ];
+  Widget widgetList(){
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: List.generate(widget.steps.length, (index){
+        return LeguangGuideBox(
+          title: widget.steps[index].title,
+          offset: offset,
+          onInit: (_){
+            sizeList[index] = _;
+            if(!isBegin){
+              isBegin = true;
+              toNext();
+            }
+          },
+        );
+      }),
+    );
   }
 
-  AnimatedPositioned tipsWidget(){
+
+  Widget tipsWidget(){
+
+    double width = MediaQuery.sizeOf(context).width;
     double left = offset.dx;
     double? top = offset.dy+size.height+4;
     bool isBottom = top>MediaQuery.sizeOf(context).height/2;
     if(isBottom){
       top-= size.height+100+titleHeight;
     }
+    var boxSize = sizeList[current];
+    if(left>width-boxSize.width){
+      left = width-boxSize.width;
+    }
+    var lineLeft = (offset.dx-(width-boxSize.width)+size.width/3);
+    print('lineLeft->$lineLeft');
+    if(lineLeft<0) lineLeft = 20;
+
     return AnimatedPositioned(
       duration: const Duration(milliseconds: 200),
       left: left,
@@ -106,21 +134,35 @@ class _LeguangGuideViewState extends State<LeguangGuideView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: isBottom?[
-          titleWidget(),
+          LeguangGuideBox(
+            title: title,
+            offset: offset,
+            onNext: toNext,
+            current: current,
+            count: widget.steps.length,
+          ),
           const SizedBox(height: 5),
-          lineWidget(),
-          dotWidget(),
+          lineWidget(lineLeft),
+          dotWidget(lineLeft),
         ]:[
-          dotWidget(),
+          dotWidget(lineLeft),
           const SizedBox(height: 5),
-          lineWidget(),
-          titleWidget()
+          lineWidget(lineLeft),
+          LeguangGuideBox(
+            title: title,
+            offset: offset,
+            onNext: toNext,
+            current: current,
+            count: widget.steps.length,
+          )
         ],
       ),
     );
   }
 
-  Widget titleWidget(){
+  Widget titleWidget({
+    String? tit
+  }){
     return Stack(
       children: [
         LayoutBuilder(
@@ -128,11 +170,11 @@ class _LeguangGuideViewState extends State<LeguangGuideView> {
             double width = MediaQuery.sizeOf(context).width;
             double minWidth = 200;
             double maxWidth = width-offset.dx-20;
-            if(minWidth>maxWidth){
-              minWidth = maxWidth;
+            if(maxWidth<minWidth){
+              maxWidth = minWidth;
             }
             return AnimatedContainer(
-              key: key,
+              // key: key,
               duration: const Duration(milliseconds: 200),
               decoration: BoxDecoration(
                 color: const Color(0xff01908A),
@@ -146,7 +188,7 @@ class _LeguangGuideViewState extends State<LeguangGuideView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title,style:const TextStyle(
+                  Text(tit??title,style:const TextStyle(
                     color: Colors.white,
                     fontSize: 14,
                     fontWeight: FontWeight.w500
@@ -191,10 +233,10 @@ class _LeguangGuideViewState extends State<LeguangGuideView> {
     );
   }
 
-  Widget dotWidget(){
+  Widget dotWidget(double left){
     return Container(
-      margin: const EdgeInsets.only(
-        left: 10
+      margin: EdgeInsets.only(
+        left: left
       ),
       decoration: BoxDecoration(
         color: const Color(0xff01908A).withOpacity(.4),
@@ -212,10 +254,10 @@ class _LeguangGuideViewState extends State<LeguangGuideView> {
     );
   }
 
-  Widget lineWidget(){
+  Widget lineWidget(double left){
     return Container(
-      margin:const EdgeInsets.only(
-        left: 10,
+      margin: EdgeInsets.only(
+        left: left,
         top: 0,
         bottom: 0
       ),

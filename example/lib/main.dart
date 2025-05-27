@@ -43,7 +43,7 @@ class _MyHomePageState extends State<MyHomePage> {
   GlobalKey key4 = GlobalKey();
 
   void begin(){
-    LeguangGuide.show(
+    LeguangGuideTool.show(
       context: context,
       guides: [
         GuideEntity(keyId: key4,title: '点击列表元素1点击列表元素1点击列表元素1点击列表元素1点击列表元素1点击列表元素1'),
@@ -110,14 +110,27 @@ class _MyHomePageState extends State<MyHomePage> {
               shrinkWrap: true,
               padding: const EdgeInsets.symmetric(vertical: 10),
               physics: const NeverScrollableScrollPhysics(),
-              separatorBuilder: (_,index)=>const Divider(),
+              separatorBuilder: (_,index)=>const Divider(height: 2),
               itemBuilder: (_,index){
                 return Container(
-                  key: index==6?key4:null,
-                  padding: const EdgeInsets.symmetric(vertical: 10),
                   color: const Color(0xff01908A),
+                  height: 50,
                   alignment: Alignment.center,
-                  child: Text('列表元素${index+1}'),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: Text('列表元素$index'),
+                      ),
+                      Container(
+                        key: index==6?key4:null,
+                        color: Colors.deepOrange,
+                        width: 80,
+                        child: Text('右侧'),
+                      )
+                    ],
+                  ),
                 );
               },
             )
