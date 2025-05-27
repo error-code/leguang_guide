@@ -1,4 +1,4 @@
-﻿name: leguang_guide
+name: leguang_guide
 description: "乐逛用户引导组件"
 version: 0.0.6
 homepage: https://www.guopi.xin
@@ -7,7 +7,8 @@ issue_tracker: https://github.com/error-code/leguang_guide/issues
 
 environment:
   sdk: '>=3.4.3 <4.0.0'
-
+  flutter: '>=3.3.0'
+  
 dependencies:
   flutter:
     sdk: flutter
@@ -52,4 +53,4 @@ flutter:
   #
   # For details regarding fonts in packages, see
   # https://flutter.dev/custom-fonts/#from-packages
-  # flutter pub publish --server=https://pub.dartlang.org 
+  # flutter pub publish --server=https://pub.dartlang.org
