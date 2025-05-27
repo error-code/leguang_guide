@@ -7,7 +7,6 @@ issue_tracker: https://github.com/error-code/leguang_guide/issues
 
 environment:
   sdk: '>=3.4.3 <4.0.0'
-#  flutter: ">=1.17.0"
 
 dependencies:
   flutter:
